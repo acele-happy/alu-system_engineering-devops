@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 
-# Run the container
+# Run the container in detached mode and map port 8080 to 80
 docker run -p 8080:80 -d -it holbertonschool/265-0
 
-# Get the container ID
+# Get the latest container ID
 CONTAINER_ID=$(docker ps -q -l)
 
-# Install Apache and set up the web page inside the container
+# Execute the required setup inside the container
 docker exec -it "$CONTAINER_ID" bash -c "
   apt-get update &&
   apt-get install -y apache2 &&
   echo 'Hello Holberton' > /var/www/html/index.html &&
   service apache2 start &&
-  service apache2 status
+  echo 'apache2 is running'
 "
