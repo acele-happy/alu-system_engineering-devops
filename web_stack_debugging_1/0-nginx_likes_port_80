@@ -1,10 +1,34 @@
 #!/usr/bin/env bash
-# Install nginx
-apt update -y
-apt install -y nginx
+# Install nginx if not installed
+apt update -y >/dev/null 2>&1
+apt install -y nginx >/dev/null 2>&1
 
-# Replace port 8080 with 80 in config if needed
-sed -i 's/8080/80/g' /etc/nginx/sites-enabled/default
+# Ensure Nginx is configured to listen on port 80
+CONFIG_FILE="/etc/nginx/sites-enabled/default"
 
-# Start nginx
-service nginx start
+# Replace port 8080 with 80 if present
+if grep -q "listen 8080" "$CONFIG_FILE"; then
+  sed -i 's/8080/80/g' "$CONFIG_FILE"
+fi
+
+# If config is missing, recreate it
+if ! grep -q "listen 80" "$CONFIG_FILE"; then
+  cat << 'EOF' > "$CONFIG_FILE"
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    root /var/www/html;
+    index index.html index.htm;
+
+    server_name _;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+EOF
+fi
+
+# Start or restart nginx
+service nginx restart >/dev/null 2>&1
